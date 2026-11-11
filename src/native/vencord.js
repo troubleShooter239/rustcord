@@ -15,6 +15,8 @@ const cssListeners = new Set();
 const settingsKey = "RustcordVencordSettings";
 let settingsSnapshot = bootstrap.settings;
 let pendingSettings = Promise.resolve();
+let waitingBatch;
+let savedSettingsJson;
 let sessionCache;
 
 try {
@@ -26,6 +28,32 @@ try {
     // Some navigation contexts block sessionStorage. The disk snapshot is still available.
 }
 
+function queueSettings(settings) {
+    const json = JSON.stringify(settings);
+    if (waitingBatch) {
+        waitingBatch.json = json;
+        return pendingSettings;
+    }
+
+    const batch = { json };
+    waitingBatch = batch;
+    pendingSettings = pendingSettings.catch(() => {}).then(async () => {
+        waitingBatch = undefined;
+        const snapshot = JSON.parse(batch.json);
+        if (batch.json !== savedSettingsJson) {
+            await call("save_settings", { settings: snapshot });
+            savedSettingsJson = batch.json;
+            try {
+                sessionCache?.setItem(settingsKey, JSON.stringify({ session: bootstrap.session, settings: snapshot }));
+            } catch {
+                // The settings have already been written to the profile.
+            }
+        }
+        settingsSnapshot = snapshot;
+    });
+    return pendingSettings;
+}
+
 Object.defineProperty(window, "__rustcordQuickCssChanged", {
     value: css => {
         for (const listener of cssListeners) listener(css);
@@ -35,24 +63,7 @@ Object.defineProperty(window, "__rustcordQuickCssChanged", {
 window.VencordNative = {
     settings: {
         get: () => settingsSnapshot,
-        set(settings) {
-            const snapshot = JSON.parse(JSON.stringify(settings));
-            pendingSettings = pendingSettings
-                .catch(() => {})
-                .then(async () => {
-                    await call("save_settings", { settings: snapshot });
-                    settingsSnapshot = snapshot;
-                    try {
-                        sessionCache?.setItem(
-                            settingsKey,
-                            JSON.stringify({ session: bootstrap.session, settings: snapshot })
-                        );
-                    } catch {
-                        // The settings have already been written to the profile.
-                    }
-                });
-            return pendingSettings;
-        },
+        set: queueSettings,
         openFolder: () => call("open_settings_folder")
     },
     quickCss: {
@@ -119,7 +130,10 @@ window.VesktopNative = {
         onRendererCssUpdate() {},
         isOutdated: async () => false,
         openUpdater: async () => {},
-        relaunch: () => call("relaunch")
+        relaunch: async () => {
+            await pendingSettings.catch(() => {});
+            return call("relaunch");
+        }
     },
     clipboard: {
         copyImage: bytes => {

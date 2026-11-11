@@ -1,6 +1,5 @@
 use std::{env, path::PathBuf};
 
-use serde_json::json;
 use tauri::{
     App, AppHandle, Manager, Url, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent,
     menu::{Menu, MenuItem, Submenu},
@@ -178,17 +177,32 @@ fn initialization_script(
         ));
     }
     if !no_vencord {
-        let bootstrap = json!({
-            "settings": profile.settings()?,
-            "token": token,
-            "session": uuid::Uuid::new_v4().to_string(),
-            "rendererCss": VENCORD_CSS,
-            "version": env!("CARGO_PKG_VERSION"),
-            "windows": cfg!(windows)
-        });
-        script.push_str(&format!(
-            "{{ const bootstrap = {bootstrap};\n{VENCORD_BRIDGE}\n}}\n{VENCORD_RENDERER}\n"
-        ));
+        #[derive(serde::Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Bootstrap<'a> {
+            settings: serde_json::Value,
+            token: &'a str,
+            session: String,
+            renderer_css: &'static str,
+            version: &'static str,
+            windows: bool,
+        }
+        let bootstrap = serde_json::to_string(&Bootstrap {
+            settings: profile.settings()?,
+            token,
+            session: uuid::Uuid::new_v4().to_string(),
+            renderer_css: VENCORD_CSS,
+            version: env!("CARGO_PKG_VERSION"),
+            windows: cfg!(windows),
+        })?;
+        script.reserve(bootstrap.len() + VENCORD_BRIDGE.len() + VENCORD_RENDERER.len() + 32);
+        script.push_str("{ const bootstrap = ");
+        script.push_str(&bootstrap);
+        script.push_str(";\n");
+        script.push_str(VENCORD_BRIDGE);
+        script.push_str("\n}\n");
+        script.push_str(VENCORD_RENDERER);
+        script.push('\n');
     }
     script.push('}');
     Ok(script)

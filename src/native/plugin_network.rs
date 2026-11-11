@@ -69,14 +69,30 @@ pub(crate) async fn deepl(pro: bool, api_key: &str, payload: String) -> Value {
 }
 
 pub(crate) async fn kagi(token: &str, text: &str, source_lang: &str, target_lang: &str) -> Value {
+    #[derive(serde::Serialize)]
+    struct Translation<'a> {
+        text: &'a str,
+        from: &'a str,
+        to: &'a str,
+        model: &'static str,
+    }
     let translate = async {
         if text.len() > MAX_TRANSLATION {
             return Err("Translation request exceeds 256 KiB.".into());
         }
-        let response = client()?.post("https://translate.kagi.com/api/translate")
+        let body = serde_json::to_vec(&Translation {
+            text,
+            from: source_lang,
+            to: target_lang,
+            model: "standard",
+        })?;
+        let response = client()?
+            .post("https://translate.kagi.com/api/translate")
             .header(header::COOKIE, format!("kagi_session={token}"))
-            .json(&json!({ "text": text, "from": source_lang, "to": target_lang, "model": "standard" }))
-            .send().await?;
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(body)
+            .send()
+            .await?;
         let (status, bytes) = translation_response(response).await?;
         Ok(json!({ "status": status, "data": serde_json::from_slice::<Value>(&bytes)? }))
     };

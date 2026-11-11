@@ -29,11 +29,11 @@ jobs:
             - name: Prepare the pinned Vencord bundle
               run: node scripts/prepare-vencord.mjs
 
-            - name: Check JavaScript syntax
+            - name: Check JavaScript and the Vencord bridge
               run: |
                   node --check scripts/prepare-vencord.mjs
-                  node --check src/native/vencord.js
                   node --check src/native/ui/editor.js
+                  node --test scripts/test-vencord-bridge.mjs
 
             - name: Check Rustcord
               run: |

@@ -179,7 +179,11 @@ fn read_text(path: &Path) -> io::Result<String> {
             "Profile file exceeds 1 MiB",
         ));
     }
-    Ok(content.trim_start_matches('\u{feff}').to_owned())
+    let bom_len = content.len() - content.trim_start_matches('\u{feff}').len();
+    if bom_len != 0 {
+        content.replace_range(..bom_len, "");
+    }
+    Ok(content)
 }
 
 fn replace(dir: &Path, name: &str, bytes: &[u8]) -> io::Result<()> {
