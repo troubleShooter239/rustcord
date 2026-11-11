@@ -1,0 +1,10 @@
+{
+    "identifier": "discord",
+    "description": "Restricted Vencord commands for the Discord webview",
+    "local": false,
+    "webviews": ["discord"],
+    "remote": {
+        "urls": ["https://discord.com/*"]
+    },
+    "permissions": ["allow-vencord"]
+}

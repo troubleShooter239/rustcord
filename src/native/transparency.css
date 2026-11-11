@@ -1,0 +1,34 @@
+/* Native materials need an alpha channel through both WebView2 and Discord. */
+html[data-rustcord-backdrop],
+html[data-rustcord-backdrop] body,
+html[data-rustcord-backdrop] #app-mount,
+html[data-rustcord-backdrop] [class^="appMount_"],
+html[data-rustcord-backdrop] [class^="app_"],
+html[data-rustcord-backdrop] [class^="bg_"],
+html[data-rustcord-backdrop] [class^="layers_"] {
+    background-color: transparent !important;
+}
+
+html[data-rustcord-backdrop] #app-mount,
+html[data-rustcord-backdrop] .theme-dark {
+    --background-base-lowest: rgb(15 17 21 / 45%);
+    --background-base-lower: rgb(23 25 30 / 38%);
+    --background-base-low: rgb(32 34 39 / 38%);
+    --background-tertiary: rgb(15 17 21 / 45%);
+    --background-secondary: rgb(23 25 30 / 38%);
+    --background-primary: rgb(32 34 39 / 38%);
+}
+
+html[data-rustcord-backdrop] .theme-light {
+    --background-base-lowest: rgb(239 242 247 / 64%);
+    --background-base-lower: rgb(245 247 251 / 65%);
+    --background-base-low: rgb(255 255 255 / 65%);
+    --background-tertiary: rgb(239 242 247 / 64%);
+    --background-secondary: rgb(245 247 251 / 65%);
+    --background-primary: rgb(255 255 255 / 65%);
+}
+
+/* The sign-in artwork covers the full client area. */
+html[data-rustcord-backdrop] [class^="characterBackground_"] {
+    display: none !important;
+}

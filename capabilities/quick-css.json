@@ -1,0 +1,6 @@
+{
+    "identifier": "quick-css",
+    "description": "Local QuickCSS editor",
+    "webviews": ["quick-css"],
+    "permissions": ["allow-editor-load", "allow-editor-save"]
+}

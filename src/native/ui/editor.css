@@ -1,0 +1,42 @@
+:root {
+    color-scheme: light dark;
+    font-family: Inter, system-ui, sans-serif;
+}
+
+body {
+    margin: 0;
+}
+
+form {
+    box-sizing: border-box;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 0.75rem;
+    padding: 1rem;
+}
+
+label {
+    font-weight: 600;
+}
+
+textarea {
+    resize: none;
+    padding: 0.75rem;
+    font:
+        0.9rem/1.55 "IBM Plex Mono",
+        ui-monospace,
+        monospace;
+    tab-size: 4;
+}
+
+footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+button {
+    padding: 0.4rem 1rem;
+}
