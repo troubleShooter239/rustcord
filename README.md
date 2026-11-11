@@ -7,10 +7,11 @@ in the tray.
 
 ## Build and run
 
-Use Node.js 22 or newer, Rust 1.90 or newer and the
+Use Node.js 22 or newer, Rust 1.99.1 or newer and the
 [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for your platform. Linux builds
 also need `libssl-dev` or the distribution's equivalent. macOS requires version 14 or newer for
 isolated WKWebView profiles.
+The preparation script uses Node.js to verify and cache the Vencord build artifacts before compilation.
 
 ```sh
 node scripts/prepare-vencord.mjs
@@ -67,67 +68,28 @@ The script includes browser, GPU, and renderer descendants of the selected proce
 private committed memory, summed working sets (which can count shared pages more than once),
 and CPU time as a percentage of one logical core.
 
-## Original Vesktop client
+## Performance roadmap
 
-Vesktop is a custom Discord desktop app
+1. **Measure signed-in workloads.** Repeat cold and warm launch, channel idle and scrolling, minimized
+   idle, voice, and screen sharing with the same settings and plugin configuration. Record startup
+   latency, CPU time, and peak and steady-state memory across all client processes. On Windows,
+   compare opaque and translucent modes under the same workload.
+2. **Profile foreground CPU first.** The earlier login-screen measurement showed lower memory with
+   Rustcord and higher foreground CPU. Use WPR with the WebView2 profile to attribute CPU to the
+   host, renderer, or GPU. Use the web inspector to trace animation, layout, timers, and plugin
+   callbacks. Compare identical workloads with individual plugins toggled to isolate their cost.
+   [WebView2 profiling guide](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/performance)
+3. **Reduce work in the hottest paths.** If settings or IPC show up in the trace, coalesce bursts of
+   settings saves and measure writes and copies. Flush pending settings before exit and test reload
+   and restart. If the renderer dominates, fix the measured animation, timer, or DOM work and
+   compare frame pacing at the same settings.
+4. **Measure memory retention and background behavior.** Repeatedly open and close QuickCSS,
+   switch channels and themes, and minimize and restore. Track steady-state memory after each
+   cycle. Tune memory policy per engine and verify notification delivery, reconnect, voice, and
+   screen sharing during background use.
+5. **Gate optimizations on compatibility.** Repeat the same scenarios on WebView2, WebKitGTK, and
+   WKWebView. Check plugin loading, settings persistence, QuickCSS, local themes, and native plugin
+   calls on each platform. Keep changes that produce a repeatable improvement while preserving
+   those behaviors.
 
-**Main features**:
-
-- Vencord preinstalled
-- Much more lightweight and faster than the official Discord app
-- Linux Screenshare with sound & wayland
-- Much better privacy, since Discord has no access to your system
-
-**Not yet supported**:
-
-- Global Keybinds
-- see the [Roadmap](https://github.com/Vencord/Vesktop/issues/324)
-
-![](https://github.com/Vencord/Vesktop/assets/45497981/8608a899-96a9-4027-9725-2cb02ba189fd)
-![](https://github.com/Vencord/Vesktop/assets/45497981/8701e5de-52c4-4346-a990-719cb971642e)
-
-## Installing
-
-Visit https://vesktop.dev/install
-
-## Building from Source
-
-You need to have the following dependencies installed:
-
-- [Git](https://git-scm.com/downloads)
-- [Node.js](https://nodejs.org/en/download)
-- pnpm: `npm install --global pnpm`
-
-Packaging will create builds in the dist/ folder
-
-```sh
-git clone https://github.com/Vencord/Vesktop
-cd Vesktop
-
-# Install Dependencies
-pnpm i
-
-# Either run it without packaging
-pnpm start
-
-# Or package (will build packages for your OS)
-pnpm package
-
-# Or only build the Linux Pacman package
-pnpm package --linux pacman
-
-# Or package to a directory only
-pnpm package:dir
-```
-
-## Building LibVesktop from Source
-
-This is a small C++ helper library Vesktop uses on Linux to emit D-Bus events. By default, prebuilt binaries for x64 and arm64 are used.
-
-If you want to build it from source:
-
-1. Install build dependencies:
-    - Debian/Ubuntu: `apt install build-essential python3 curl pkg-config libglib2.0-dev`
-    - Fedora: `dnf install @c-development @development-tools python3 curl pkgconf-pkg-config glib2-devel`
-2. Run `pnpm buildLibVesktop`
-3. From now on, building Vesktop will use your own build
+Rustcord originated as a port of [Vesktop](https://github.com/Vencord/Vesktop).

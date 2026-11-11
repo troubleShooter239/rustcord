@@ -3,7 +3,7 @@ use webview2_com::Microsoft::Web::WebView2::Win32::{
     COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_LOW, COREWEBVIEW2_MEMORY_USAGE_TARGET_LEVEL_NORMAL,
     ICoreWebView2_19,
 };
-use windows_core::Interface;
+use windows::core::Interface;
 
 use crate::app::Backdrop;
 

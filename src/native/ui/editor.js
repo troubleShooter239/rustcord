@@ -1,5 +1,5 @@
 /*
- * Vesktop, a desktop app aiming to give you a snappier Discord Experience
+ * Rustcord, a Tauri desktop client for Discord
  * Copyright (c) 2026 Rustcord contributors
  * SPDX-License-Identifier: GPL-3.0-or-later
  */

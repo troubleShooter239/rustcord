@@ -184,8 +184,7 @@ fn initialization_script(
             "session": uuid::Uuid::new_v4().to_string(),
             "rendererCss": VENCORD_CSS,
             "version": env!("CARGO_PKG_VERSION"),
-            "windows": cfg!(windows),
-            "backdropCss": ""
+            "windows": cfg!(windows)
         });
         script.push_str(&format!(
             "{{ const bootstrap = {bootstrap};\n{VENCORD_BRIDGE}\n}}\n{VENCORD_RENDERER}\n"
